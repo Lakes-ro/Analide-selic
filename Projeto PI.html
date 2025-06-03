@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Simulador de Quitação de Dívida - JG Comércio e Serviços Ltda.</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f4f8;
+      margin: 0; padding: 0;
+      color: #264653;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem;
+    }
+    h1 {
+      color: #2a9d8f;
+      margin-bottom: 0.2rem;
+      text-align: center;
+    }
+    h2 {
+      color: #264653;
+      margin-top: 0;
+      font-weight: 600;
+    }
+    p.description {
+      max-width: 700px;
+      margin-bottom: 2rem;
+      font-size: 1.1rem;
+      color: #555;
+      text-align: center;
+    }
+    .container {
+      max-width: 900px;
+      width: 100%;
+      background: #fff;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      padding: 1.5rem 2rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: 600;
+      color: #264653;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 0.6rem 0.8rem;
+      margin-top: 0.2rem;
+      border-radius: 6px;
+      border: 1px solid #bbb;
+      font-size: 1rem;
+      transition: border-color 0.3s ease;
+    }
+    input[type="number"]:focus {
+      border-color: #2a9d8f;
+      outline: none;
+    }
+    .button-container {
+      grid-column: span 2;
+      text-align: center;
+      margin-top: 2rem;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    button {
+      background-color: #2a9d8f;
+      color: white;
+      border: none;
+      padding: 0.8rem 2rem;
+      border-radius: 30px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      box-shadow: 0 6px 12px rgba(42, 157, 143, 0.5);
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #21867a;
+    }
+    .results {
+      margin-top: 2rem;
+      grid-column: span 2;
+      background: #e9f5f2;
+      border-radius: 10px;
+      padding: 1.5rem;
+      box-shadow: inset 0 0 10px rgba(42,157,143,0.2);
+      max-width: 900px;
+      width: 100%;
+    }
+    .result-section {
+      margin-bottom: 1.5rem;
+    }
+    .result-section h3 {
+      margin-top: 0;
+      color: #117a65;
+    }
+    .result-values {
+      font-size: 1.2rem;
+      color: #264653;
+      margin-top: 0.4rem;
+    }
+    canvas {
+      max-width: 100%;
+      margin-top: 1rem;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      padding: 12px;
+    }
+    #exportBtn {
+      background-color: #e76f51;
+      box-shadow: 0 6px 12px rgba(231, 111, 81, 0.5);
+      display: none;
+    }
+    #exportBtn:hover {
+      background-color: #c7573b;
+    }
+
+    @media (max-width: 720px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+      .button-container {
+        grid-column: span 1;
+      }
+      .results {
+        grid-column: span 1;
+      }
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Simulador de Quitação de Dívida</h1>
+  <p class="description">
+    Simule duas alternativas para a JG Comércio e Serviços Ltda. quitar sua dívida tributária:
+    <strong>Empréstimo Bancário</strong> ou <strong>Parcelamento com Governo Federal</strong>.
+    Informe os dados solicitados e compare custos totais, parcelas e taxas.
+  </p>
+
+  <form id="simuladorForm" class="container" novalidate>
+    <fieldset>
+      <h2>Opção 1: Empréstimo Bancário</h2>
+      <label for="principalEmprestimo">Valor do Principal (dívida) (R$):</label>
+      <input type="number" step="0.01" min="0" id="principalEmprestimo" required placeholder="Ex: 100000" />
+
+      <label for="jurosEmprestimo">Taxa de Juros Anual (%):</label>
+      <input type="number" step="0.0001" min="0" id="jurosEmprestimo" required placeholder="Ex: 12" />
+
+      <label for="prazoEmprestimo">Prazo em meses:</label>
+      <input type="number" min="1" id="prazoEmprestimo" required placeholder="Ex: 24" />
+    </fieldset>
+
+    <fieldset>
+      <h2>Opção 2: Parcelamento com Governo Federal</h2>
+      <label for="valorDividaGoverno">Valor Original da Dívida (R$):</label>
+      <input type="number" step="0.01" min="0" id="valorDividaGoverno" required placeholder="Ex: 100000" />
+
+      <label for="multaGoverno">Multa (%) sobre valor original:</label>
+      <input type="number" step="0.01" min="0" id="multaGoverno" required placeholder="Ex: 10" />
+
+      <label for="jurosSelic">Taxa SELIC Anual (%):</label>
+      <input type="number" step="0.0001" min="0" id="jurosSelic" required placeholder="Ex: 8" />
+
+      <label for="prazoGoverno">Prazo em meses:</label>
+      <input type="number" min="1" id="prazoGoverno" required placeholder="Ex: 24" />
+    </fieldset>
+
+    <div class="button-container">
+      <button type="submit" id="btnCalcular">Calcular</button>
+      <button type="button" id="exportBtn">Exportar PDF</button>
+    </div>
+
+    <section id="resultados" class="results" style="display:none;">
+      <div class="result-section" id="resultadoEmprestimo">
+        <h3>Resultado do Empréstimo Bancário</h3>
+        <p class="result-values" id="parcelaEmprestimo"></p>
+        <p class="result-values" id="custoTotalEmprestimo"></p>
+      </div>
+      <div class="result-section" id="resultadoGoverno">
+        <h3>Resultado do Parcelamento com Governo Federal</h3>
+        <p class="result-values" id="parcelaGoverno"></p>
+        <p class="result-values" id="custoTotalGoverno"></p>
+      </div>
+      <div class="result-section" id="comparativoFinal">
+        <h3>Comparativo Final</h3>
+        <p class="result-values" id="melhorOpcao"></p>
+        <canvas id="graficoCusto" width="700" height="350" aria-label="Gráfico comparativo de custo total" role="img"></canvas>
+        <canvas id="graficoParcelas" width="700" height="350" aria-label="Gráfico comparativo de valor das parcelas" role="img"></canvas>
+      </div>
+    </section>
+  </form>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <script>
+    (function(){
+      const form = document.getElementById('simuladorForm');
+      const exportBtn = document.getElementById('exportBtn');
+      const resultadosSection = document.getElementById('resultados');
+      const parcelaEmprestimoEl = document.getElementById('parcelaEmprestimo');
+      const custoTotalEmprestimoEl = document.getElementById('custoTotalEmprestimo');
+      const parcelaGovernoEl = document.getElementById('parcelaGoverno');
+      const custoTotalGovernoEl = document.getElementById('custoTotalGoverno');
+      const melhorOpcaoEl = document.getElementById('melhorOpcao');
+      let graficoCusto = null;
+      let graficoParcelas = null;
+
+      function verificarCamposPositivos(valores) {
+        for (const v of valores) {
+          if (isNaN(v) || v < 0) return false;
+        }
+        return true;
+      }
+
+      function criarGraficos(custoEmprestimo, custoGoverno, parcelaEmprestimo, parcelaGoverno) {
+        const ctxCusto = document.getElementById('graficoCusto').getContext('2d');
+        const ctxParcelas = document.getElementById('graficoParcelas').getContext('2d');
+
+        if(graficoCusto) graficoCusto.destroy();
+        if(graficoParcelas) graficoParcelas.destroy();
+
+        graficoCusto = new Chart(ctxCusto, {
+          type: 'bar',
+          data: {
+            labels: ['Empréstimo Bancário', 'Parcelamento Governo'],
+            datasets: [{
+              label: 'Custo Total (R$)',
+              data: [custoEmprestimo, custoGoverno],
+              backgroundColor: ['#2a9d8f', '#e76f51']
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: ctx => 'R$ ' + ctx.parsed.y.toLocaleString('pt-BR', {minimumFractionDigits:2})
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: val => 'R$ ' + val.toLocaleString('pt-BR')
+                }
+              }
+            }
+          }
+        });
+
+        graficoParcelas = new Chart(ctxParcelas, {
+          type: 'bar',
+          data: {
+            labels: ['Empréstimo Bancário', 'Parcelamento Governo'],
+            datasets: [{
+              label: 'Parcela Mensal (R$)',
+              data: [parcelaEmprestimo, parcelaGoverno],
+              backgroundColor: ['#264653', '#f4a261']
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: ctx => 'R$ ' + ctx.parsed.y.toLocaleString('pt-BR', {minimumFractionDigits:2})
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: val => 'R$ ' + val.toLocaleString('pt-BR')
+                }
+              }
+            }
+          }
+        });
+      }
+
+      async function exportarPDF() {
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'pt', 'a4');
+        const margemLat = 40;
+        const larguraPDF = pdf.internal.pageSize.getWidth() - margemLat * 2;
+        const resultados = document.getElementById('resultados');
+
+        const canvasResultados = await html2canvas(resultados, { scale: 2 });
+        const imgData = canvasResultados.toDataURL('image/png');
+        const imgProps = pdf.getImageProperties(imgData);
+        const alturaImg = (imgProps.height * larguraPDF) / imgProps.width;
+
+        pdf.setFontSize(18);
+        pdf.setTextColor('#2a9d8f');
+        pdf.text('Relatório do Simulador de Quitação de Dívida', margemLat, 40);
+        pdf.addImage(imgData, 'PNG', margemLat, 60, larguraPDF, alturaImg);
+        pdf.save('simulador_divida_jg.pdf');
+      }
+
+      function calcular(event) {
+        event.preventDefault();
+
+        const principalEmprestimo = parseFloat(document.getElementById('principalEmprestimo').value);
+        const jurosEmprestimoAnual = parseFloat(document.getElementById('jurosEmprestimo').value);
+        const prazoEmprestimo = parseInt(document.getElementById('prazoEmprestimo').value);
+
+        const valorDividaGoverno = parseFloat(document.getElementById('valorDividaGoverno').value);
+        const multaGovernoPercent = parseFloat(document.getElementById('multaGoverno').value);
+        const jurosSelicAnual = parseFloat(document.getElementById('jurosSelic').value);
+        const prazoGoverno = parseInt(document.getElementById('prazoGoverno').value);
+
+        if (!verificarCamposPositivos([
+          principalEmprestimo,
+          jurosEmprestimoAnual,
+          prazoEmprestimo,
+          valorDividaGoverno,
+          multaGovernoPercent,
+          jurosSelicAnual,
+          prazoGoverno
+        ])) {
+          alert('Por favor, preencha todos os campos com valores numéricos positivos.');
+          return;
+        }
+
+        const i = jurosEmprestimoAnual / 100 / 12;
+        const n = prazoEmprestimo;
+        const P = principalEmprestimo;
+
+        let parcelaEmprestimo = 0;
+        if (i === 0) {
+          parcelaEmprestimo = P / n;
+        } else {
+          parcelaEmprestimo = P * (i * Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1);
+        }
+        parcelaEmprestimo = Number(parcelaEmprestimo.toFixed(2));
+        const custoTotalEmprestimo = Number((parcelaEmprestimo * n).toFixed(2));
+
+        const multa = valorDividaGoverno * (multaGovernoPercent / 100);
+        const valorAtualizado = valorDividaGoverno + multa;
+
+        const tAnos = prazoGoverno / 12;
+        const jurosSimples = valorAtualizado * (jurosSelicAnual / 100) * tAnos;
+
+        const custoTotalGoverno = Number((valorAtualizado + jurosSimples).toFixed(2));
+        const parcelaGoverno = Number((custoTotalGoverno / prazoGoverno).toFixed(2));
+
+        parcelaEmprestimoEl.textContent = `Parcela mensal: R$ ${parcelaEmprestimo.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        custoTotalEmprestimoEl.textContent = `Custo total do empréstimo: R$ ${custoTotalEmprestimo.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+
+        parcelaGovernoEl.textContent = `Parcela mensal: R$ ${parcelaGoverno.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        custoTotalGovernoEl.textContent = `Custo total do parcelamento: R$ ${custoTotalGoverno.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+
+        let melhorTexto = '';
+        if (custoTotalEmprestimo < custoTotalGoverno) {
+          melhorTexto = "Recomendação: A opção mais vantajosa é o Empréstimo Bancário, considerando custo total.";
+        } else if (custoTotalGoverno < custoTotalEmprestimo) {
+          melhorTexto = "Recomendação: A opção mais vantajosa é o Parcelamento com Governo Federal, considerando custo total.";
+        } else {
+          melhorTexto = "Os custos totais de ambas as opções são iguais. Avalie outros fatores para decisão.";
+        }
+        melhorOpcaoEl.textContent = melhorTexto;
+
+        resultadosSection.style.display = 'block';
+
+        criarGraficos(custoTotalEmprestimo, custoTotalGoverno, parcelaEmprestimo, parcelaGoverno);
+
+        exportBtn.style.display = 'inline-block';
+      }
+
+      form.addEventListener('submit', calcular);
+      exportBtn.addEventListener('click', exportarPDF);
+    })();
+  </script>
+</body>
+</html>
